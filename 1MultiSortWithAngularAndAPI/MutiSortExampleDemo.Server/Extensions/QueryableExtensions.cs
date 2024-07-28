@@ -6,24 +6,6 @@ namespace BaseProject.Extensions;
 
 public static class QueryableExtensions
 {
-    public static IOrderedQueryable<T> OrderBy<T>(this IQueryable<T> source, string propertyName)
-    {
-        return source.OrderBy(CreateExpression<T>(propertyName));
-    }
-
-    public static IOrderedQueryable<T> OrderByDescending<T>(this IQueryable<T> source, string propertyName)
-    {
-        return source.OrderByDescending(CreateExpression<T>(propertyName));
-    }
-
-    private static Expression<Func<T, object>> CreateExpression<T>(string propertyName)
-    {
-        var parameter = Expression.Parameter(typeof(T), "x");
-        Expression property = Expression.Property(parameter, propertyName);
-        var conversion = Expression.Convert(property, typeof(object));
-        return Expression.Lambda<Func<T, object>>(conversion, parameter);
-    }
-
     public static IOrderedQueryable<T> OrderByDynamic<T>(
          this IQueryable<T> query,
          IEnumerable<SortColumn> sortCriteria)
@@ -37,7 +19,7 @@ public static class QueryableExtensions
         {
             return (IOrderedQueryable<T>)query;
         }
-        var orderedQuery = (string.IsNullOrEmpty(firstCriteria.Direction) || firstCriteria.Direction == SortColumn.Ascending)
+        var orderedQuery = (string.IsNullOrEmpty(firstCriteria.Direction) || firstCriteria.Direction == SortColumn.Asc)
             ? query.OrderBy(GenerateSelector<T>(firstCriteria.Column.CapitalizeFirstLetter()))
             : query.OrderByDescending(GenerateSelector<T>(firstCriteria.Column.CapitalizeFirstLetter()));
 
@@ -48,7 +30,7 @@ public static class QueryableExtensions
             {
                 continue;
             }
-            orderedQuery = (string.IsNullOrEmpty(criteria.Direction) || criteria.Direction == SortColumn.Ascending)
+            orderedQuery = (string.IsNullOrEmpty(criteria.Direction) || criteria.Direction == SortColumn.Asc)
                 ? orderedQuery.ThenBy(GenerateSelector<T>(criteria.Column.CapitalizeFirstLetter()))
                 : orderedQuery.ThenByDescending(GenerateSelector<T>(criteria.Column.CapitalizeFirstLetter()));
         }

@@ -17,6 +17,6 @@ export class EmployeeService {
         params = params.set(`sortColumns[${index}].direction`, column.direction);
       });
     }
-    return this.http.get<any[]>('https://localhost:7190/WeatherForecast/GetEmployees', { params });
+    return this.http.get<any[]>('http://localhost:5210/Home/GetEmployees', { params });
   }
 }

@@ -1,5 +1,7 @@
 using BaseProject.DataContext;
+using BaseProject.Dtos;
 using BaseProject.Entities;
+using BaseProject.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -55,6 +57,29 @@ namespace BaseProject.Controllers
             await _projectDbContext.SubUnits.AddAsync(subUnit);
             await _projectDbContext.SaveChangesAsync();
             return Ok();
+        }
+
+        [HttpGet("GetEmployees")]
+        public async Task<IActionResult> GetEmployees([FromQuery] List<SortColumn> sortColumns)
+        {
+            // Fetch data from your data source (e.g., database)
+            var query = _projectDbContext.Employees.AsQueryable();
+
+            // Apply sorting
+            if (sortColumns != null && sortColumns.Count > 0)
+            {
+                query = query.OrderByDynamic<Employee>(sortColumns);
+            }
+            var data = await query
+                .AsNoTracking()
+                .Select(s => new
+                {
+                    s.FirstName,
+                    s.LastName,
+                    s.JobTitle
+                })
+                .ToListAsync();
+            return Ok(data);
         }
     }
 }

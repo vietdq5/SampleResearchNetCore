@@ -4,6 +4,8 @@ using BaseProject.Entities;
 using BaseProject.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Dynamic.Core;
+using System.Text;
 
 namespace BaseProject.Controllers
 {
@@ -70,6 +72,48 @@ namespace BaseProject.Controllers
             {
                 query = query.OrderByDynamic<Employee>(sortColumns);
             }
+            var data = await query
+                .AsNoTracking()
+                .Select(s => new
+                {
+                    s.FirstName,
+                    s.LastName,
+                    s.JobTitle
+                })
+                .ToListAsync();
+            return Ok(data);
+        }
+
+
+        /// <summary>
+        /// v2 dung lib System.Linq.Dynamic.Core
+        /// format query
+        /// http://localhost:5210/Home/GetEmployeesV2?sortColumns[0].column=lastName&sortColumns[0].direction=asc&sortColumns[1].column=firstName&sortColumns[1].direction=desc
+        /// </summary>
+        /// <param name="sortColumns"></param>
+        /// <returns></returns>
+        [HttpGet("GetEmployeesV2")]
+        public async Task<IActionResult> GetEmployeesV2([FromQuery] List<SortColumn> sortColumns)
+        {
+            // Fetch data from your data source (e.g., database)
+            var query = _projectDbContext.Employees.AsQueryable();
+            if (sortColumns?.Count > 0)
+            {
+                //List<string> columnQueries = [];
+                //foreach (var item in sortColumns)
+                //{
+                //    var sortValue = item.Direction == SortColumn.Asc ? SortColumn.Ascending : SortColumn.Descending;
+                //    columnQueries.Add($"{item.Column} {sortValue}");
+                //}
+                //var queryOrder = string.Join(",", columnQueries);
+                // reduce code
+                var queryOrder = string.Join(",", sortColumns.Select(item => $"{item.Column} {(item.Direction == SortColumn.Asc ? SortColumn.Ascending : SortColumn.Descending)}"));
+                if (!string.IsNullOrEmpty(queryOrder))
+                {
+                    query = query.OrderBy(queryOrder);
+                }
+            }
+
             var data = await query
                 .AsNoTracking()
                 .Select(s => new
